@@ -14,6 +14,23 @@ public class User {
     return new String(Base64.getEncoder().encode(key.getEncoded()));
   }
 
+  public boolean isValid() {
+    try {
+      // The attributes must be set
+      if (this.id == null || this.key == null) {
+        return false;
+      }
+      MessageDigest sha256Digest = MessageDigest.getInstance("SHA-256");
+      byte[] hash = sha256Digest.digest(this.key.getEncoded());
+      String id = new String(Base64.getEncoder().encode(hash));
+      // Compare digests
+      return this.id.equals(id);
+      // Catch everything and return false otherwise
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
   public void setKey(String key) throws InvalidKeySpecException, NoSuchAlgorithmException {
     // Strip down the key delimiters
     // Remove all the new lines
@@ -27,7 +44,7 @@ public class User {
     this.key = (RSAPublicKey) kf.generatePublic(new X509EncodedKeySpec(decoded));
     // Set the id based on the sha256 digest of the key
     MessageDigest sha256Digest = MessageDigest.getInstance("SHA-256");
-    byte[] hash = sha256Digest.digest(decoded);
+    byte[] hash = sha256Digest.digest(this.key.getEncoded());
     // Base64 encode it and set it
     this.id = new String(Base64.getEncoder().encode(hash));
   }
