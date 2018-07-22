@@ -15,6 +15,7 @@ public class UserStateManager {
 
   public static void add(User user) throws IllegalArgumentException {
     // Check if the user is valid
+    System.out.println(user);
     if (!user.isValid()) {
       throw new IllegalArgumentException();
     }
@@ -23,6 +24,7 @@ public class UserStateManager {
   }
 
   public static User find(String id) throws NoSuchElementException {
+    System.out.println(id);
     User user = users.get(id);
     if (user == null) {
       throw new NoSuchElementException();
