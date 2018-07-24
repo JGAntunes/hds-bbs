@@ -6,17 +6,21 @@ import javax.xml.bind.DatatypeConverter;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
+import java.time.ZonedDateTime;
+import java.util.Calendar;
+import java.util.Date;
 
 public class Message {
   private String body;
   private byte[] signature;
   private String userId;
+  private ZonedDateTime creationDate;
 
   @JsonIgnore
   public boolean isValid(User user) {
     try {
       // The attributes must be set
-      if (this.body == null || this.signature == null || this.userId == null) {
+      if (this.body == null || this.signature == null || this.userId == null || this.creationDate == null) {
         return false;
       }
       // The userId assigned is the same as the given user
@@ -58,7 +62,21 @@ public class Message {
     this.userId = userId;
   }
 
-  public String getUserId(String userId) {
+  public String getUserId() {
     return this.userId;
+  }
+
+  public String getCreationDate() {
+    return this.creationDate.toString();
+  }
+
+  public void setCreationDate(String creationDate) {
+    ZonedDateTime date = ZonedDateTime.parse(creationDate);
+    this.creationDate = date;
+  }
+
+  @Override
+  public String toString() {
+    return "Message\nsign: " + this.getSignature() + "\nuserId: " + this.getUserId() + "\nbody: " + this.getBody();
   }
 }

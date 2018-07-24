@@ -3,13 +3,9 @@ package bbs.resources;
 import bbs.core.User;
 import bbs.core.UserStateManager;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.NoSuchElementException;
 
 @Path("/users")

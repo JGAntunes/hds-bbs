@@ -66,8 +66,17 @@ public class User {
   public Boolean verifySignature (Message message) throws InvalidKeyException, NoSuchAlgorithmException, SignatureException {
     Signature signature = Signature.getInstance("SHA256withRSA");
     signature.initVerify(this.key);
-    signature.update(message.getBody().getBytes(StandardCharsets.UTF_8));
-    return signature.verify(message.getSignature().getBytes());
+    // Signature is made using the creationDate and the message body
+    String toSign = message.getCreationDate() + message.getBody();
+    byte[] toSignByteArray = toSign.getBytes(StandardCharsets.UTF_8);
+    signature.update(toSignByteArray);
+    signature.
+    // We need to parse the hex binary string
+    System.out.println(message);
+    System.out.println(toSign);
+    System.out.println(DatatypeConverter.parseHexBinary(message.getSignature()).length);
+    System.out.println(signature.verify(DatatypeConverter.parseHexBinary(message.getSignature())));
+    return signature.verify(DatatypeConverter.parseHexBinary(message.getSignature()));
   }
 
   @Override
