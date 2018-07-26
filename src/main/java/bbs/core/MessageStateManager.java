@@ -15,20 +15,22 @@ public class MessageStateManager {
   }
 
   public static void add(User user, Message message) throws IllegalArgumentException {
+    System.out.println(message);
     try {
       // Confirm the user exists in our data management system
-      UserStateManager.find(user.getId());
+      UserStateManager.find(user.getStringId());
     } catch (NoSuchElementException e) {
       throw new IllegalArgumentException();
     }
     // The user and message are both valid
     if (!user.isValid() || !message.isValid(user)) {
+      System.out.println("User: " + user.isValid() + " Message: " + message.isValid(user));
       throw new IllegalArgumentException();
     }
     // Initialise the queue of messages for the user if it doesn't exist
-    messages.putIfAbsent(user.getId(), new ConcurrentLinkedDeque<Message>());
+    messages.putIfAbsent(user.getStringId(), new ConcurrentLinkedDeque<Message>());
     // Insert it
-    messages.get(user.getId()).addFirst(message);
+    messages.get(user.getStringId()).addFirst(message);
   }
 
   public static List<Message> find(String id, int maxNum) throws NoSuchElementException {

@@ -1,6 +1,6 @@
 package bbs.resources;
 
-import bbs.core.User;
+import bbs.core.UserServer;
 import bbs.core.UserStateManager;
 
 import javax.ws.rs.*;
@@ -12,7 +12,7 @@ import java.util.NoSuchElementException;
 public class UserResource {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response createUser(User user) {
+  public Response createUser(UserServer user) {
     try {
       UserStateManager.add(user);
     } catch (IllegalArgumentException e) {

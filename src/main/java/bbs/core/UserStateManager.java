@@ -4,28 +4,28 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class UserStateManager {
-  private static ConcurrentHashMap<String, User> users;
+  private static ConcurrentHashMap<String, UserServer> users;
 
   private UserStateManager() {
   }
 
   public static void create() {
-    users = new ConcurrentHashMap<String, User>();
+    users = new ConcurrentHashMap<String, UserServer>();
   }
 
-  public static void add(User user) throws IllegalArgumentException {
+  public static void add(UserServer user) throws IllegalArgumentException {
     // Check if the user is valid
     System.out.println(user);
     if (!user.isValid()) {
       throw new IllegalArgumentException();
     }
     // Insert only if it doesn't exist
-    users.putIfAbsent(user.getId(), user);
+    users.putIfAbsent(user.getStringId(), user);
   }
 
-  public static User find(String id) throws NoSuchElementException {
+  public static UserServer find(String id) throws NoSuchElementException {
     System.out.println(id);
-    User user = users.get(id);
+    UserServer user = users.get(id);
     if (user == null) {
       throw new NoSuchElementException();
     }

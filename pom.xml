@@ -7,7 +7,12 @@
   <groupId>bbs</groupId>
   <artifactId>bbs</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <packaging>war</packaging>
+
+  <!-- Optionally generate a jar file by doing - mvn install -Dp.type=jar -->
+  <properties>
+    <p.type>war</p.type>
+  </properties>
+  <packaging>${p.type}</packaging>
 
   <dependencies>
     <dependency>

@@ -20,6 +20,10 @@ public class MessageResource {
   public Response createMessage(@PathParam("userId") String userId, Message message) {
     try{
       User user = UserStateManager.find(userId);
+      // User trying to post on a different user message board
+      if (!user.getStringId().equals(userId)) {
+        return Response.status(403).build();
+      }
       MessageStateManager.add(user, message);
       return Response.status(201).build();
     } catch (NoSuchElementException e) {
