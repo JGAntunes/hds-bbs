@@ -28,6 +28,23 @@ jgantunes@BRUTOZORD ~/I/hds-bbs> curl -X POST -H "Content-Type: application/json
 
 ```
 
+#### Replicated server locally
+
+To run multiple BBS servers locally you'll need `docker-compose`. You can then run the following command where <N> is the server replication factor:
+```
+docker-compose up --build --scale bbs-server=<N>
+```
+
+To see which ports the processes are bound to (by default will be in the range of 8080 -> 8090) run the following:
+```
+jgantunes@BRUTOZORD ~> docker ps
+CONTAINER ID        IMAGE                COMMAND             CREATED             STATUS              PORTS                    NAMES
+7eb5e3472362        hds-bbs_bbs-server   "catalina.sh run"   17 minutes ago      Up 18 seconds       0.0.0.0:8084->8080/tcp   hds-bbs_bbs-server_1
+b001012e834e        hds-bbs_bbs-server   "catalina.sh run"   17 minutes ago      Up 17 seconds       0.0.0.0:8085->8080/tcp   hds-bbs_bbs-server_2
+```
+
+The ports for your host will be listed under PORTS.
+
 ### Client
 
 The client lib under bbs.client package has all the necessary resources to interact with the API, specifically the `Operations` class. For commodity, we've packaged a small CLI (bbs.client.Client) based utility that can be used to load user keys and interact with the BBS service of your choice.
