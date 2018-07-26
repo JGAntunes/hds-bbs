@@ -15,6 +15,10 @@ public class UserResource {
   public Response createUser(User user) {
     try {
       UserStateManager.add(user);
+    } catch (IllegalStateException e) {
+      // We didn't write, as such we acknowledge the attempt and move on
+      e.printStackTrace();
+      return Response.status(200).build();
     } catch (IllegalArgumentException e) {
       e.printStackTrace();
       return Response.status(400).build();

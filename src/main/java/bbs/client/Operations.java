@@ -6,6 +6,7 @@ import bbs.core.Utils;
 
 import javax.ws.rs.core.Response;
 import javax.xml.bind.DatatypeConverter;
+import java.io.SyncFailedException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -18,10 +19,11 @@ import java.util.List;
 public class Operations {
 
   private List<BBSClient> restClients;
-  private int selected;
+  private int acks;
 
   public Operations(List<BBSClient> clients) {
     this.restClients = clients;
+    this.acks = 0;
   }
 
   // TODO make all these requests async
@@ -33,15 +35,19 @@ public class Operations {
     return responses.get(0);
   }
 
-  public void register (UserClient user) throws NoSuchAlgorithmException {
+  public void register (UserClient user) throws NoSuchAlgorithmException, SyncFailedException {
     user.generateTimestamp();
     user.setCreationDate(ZonedDateTime.now());
     for(BBSClient restClient : this.restClients) {
-      handleResponse(restClient.createUser(user));
+      handleWriteResponse(restClient.createUser(user));
+    }
+    if (!haveConsensus()) {
+      throw new SyncFailedException("No consensus from servers");
     }
   }
 
-  public void post (UserClient user, String messageBody) throws NoSuchAlgorithmException, SignatureException, InvalidKeyException {
+  public void post (UserClient user, String messageBody) throws NoSuchAlgorithmException, SignatureException, InvalidKeyException, SyncFailedException {
+    this.acks = 0;
     for(BBSClient restClient : this.restClients) {
       Message message = new Message();
       message.generateTimestamp();
@@ -49,7 +55,10 @@ public class Operations {
       message.setUserId(user.getStringId());
       message.setCreationDate(ZonedDateTime.now());
       user.sign(message);
-      handleResponse(restClient.createMessage(user.getStringId(), message));
+      handleWriteResponse(restClient.createMessage(user.getStringId(), message));
+    }
+    if (!haveConsensus()) {
+      throw new SyncFailedException("No consensus from servers");
     }
   }
 
@@ -61,9 +70,16 @@ public class Operations {
     return responses.get(0);
   }
 
-  private void handleResponse (Response response) {
+  private void handleWriteResponse (Response response) {
+    if (response.getStatus() < 400) {
+      acks++;
+    }
     System.out.println("== Reponse ==");
     System.out.println("Status: " + response.getStatus());
     System.out.println("Body: " + response.readEntity(String.class));
+  }
+
+  private boolean haveConsensus () {
+    return this.acks > (this.restClients.size() / 2);
   }
 }

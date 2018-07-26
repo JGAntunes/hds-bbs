@@ -29,6 +29,9 @@ public class MessageResource {
     } catch (NoSuchElementException e) {
       e.printStackTrace();
       return Response.status(400).build();
+    } catch (IllegalStateException e) {
+      e.printStackTrace();
+      return Response.status(403).build();
     } catch (IllegalArgumentException e) {
       e.printStackTrace();
       return Response.status(400).build();
