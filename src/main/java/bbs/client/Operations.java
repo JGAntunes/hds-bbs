@@ -12,6 +12,7 @@ import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.interfaces.RSAPublicKey;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Operations {
@@ -21,44 +22,43 @@ public class Operations {
 
   public Operations(List<BBSClient> clients) {
     this.restClients = clients;
-    this.selected = 0;
   }
 
-  private void nextClient() {
-    this.selected = ((this.selected + 1) % this.restClients.size());
-  }
-
+  // TODO make all these requests async
   public UserClient userInfo (String userId) throws NoSuchAlgorithmException {
-    BBSClient restClient = this.restClients.get(this.selected);
-    nextClient();
-
-    return restClient.getUser(userId);
+    List<UserClient> responses = new ArrayList<UserClient>();
+    for(BBSClient restClient : this.restClients) {
+      responses.add(restClient.getUser(userId));
+    }
+    return responses.get(0);
   }
 
   public void register (UserClient user) throws NoSuchAlgorithmException {
-    BBSClient restClient = this.restClients.get(this.selected);
-    nextClient();
-
-    handleResponse(restClient.createUser(user));
+    user.generateTimestamp();
+    user.setCreationDate(ZonedDateTime.now());
+    for(BBSClient restClient : this.restClients) {
+      handleResponse(restClient.createUser(user));
+    }
   }
 
   public void post (UserClient user, String messageBody) throws NoSuchAlgorithmException, SignatureException, InvalidKeyException {
-    BBSClient restClient = this.restClients.get(this.selected);
-    nextClient();
-
-    Message message = new Message();
-    message.setBody(messageBody);
-    message.setUserId(user.getStringId());
-    message.setCreationDate(ZonedDateTime.now());
-    user.sign(message);
-    handleResponse(restClient.createMessage(user.getStringId(), message));
+    for(BBSClient restClient : this.restClients) {
+      Message message = new Message();
+      message.generateTimestamp();
+      message.setBody(messageBody);
+      message.setUserId(user.getStringId());
+      message.setCreationDate(ZonedDateTime.now());
+      user.sign(message);
+      handleResponse(restClient.createMessage(user.getStringId(), message));
+    }
   }
 
   public List<Message> read (String userId, int number) throws NoSuchAlgorithmException {
-    BBSClient restClient = this.restClients.get(this.selected);
-    nextClient();
-
-    return restClient.getMessages(userId, number);
+    List<List<Message>> responses = new ArrayList<List<Message>>();
+    for(BBSClient restClient : this.restClients) {
+      responses.add(restClient.getMessages(userId, number));
+    }
+    return responses.get(0);
   }
 
   private void handleResponse (Response response) {

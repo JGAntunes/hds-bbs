@@ -8,17 +8,19 @@ import javax.xml.bind.DatatypeConverter;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.time.ZonedDateTime;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 
-public class Message {
+public class Message extends TimeStampedPayload {
   private String body;
   private byte[] signature;
   private String userId;
   private ZonedDateTime creationDate;
+//  private String reqId;
 
   @JsonIgnore
   public boolean isValid(User user) {
@@ -31,7 +33,7 @@ public class Message {
       if (!user.getStringId().equals(this.userId)) {
         return false;
       }
-      return user.verifySignature(this);
+      return user.verifySignature(this) && super.isValid();
     } catch (NoSuchAlgorithmException e) {
       e.printStackTrace();
       return false;
@@ -94,6 +96,21 @@ public class Message {
     ZonedDateTime date = ZonedDateTime.parse(creationDate);
     this.creationDate = date;
   }
+
+//  public String getReqId() {
+//    return this.reqId;
+//  }
+//
+//  public void setReqId(String reqId) {
+//    this.reqId = reqId;
+//  }
+//
+//  public void generateReqId() {
+//    SecureRandom random = new SecureRandom();
+//    byte[] reqIdBytes = new byte[256];
+//    random.nextBytes(reqIdBytes);
+//    this.reqId = Base64.getEncoder().withoutPadding().encodeToString(reqIdBytes);
+//  }
 
   public void setCreationDate(ZonedDateTime creationDate) {
     this.creationDate = creationDate;

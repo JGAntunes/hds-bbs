@@ -31,13 +31,11 @@ public class UserClient extends User {
   @JsonIgnore
   public boolean isValid() {
     try {
-      // The attributes must be set
-      if (this.getStringId() == null || this.getPubKey() == null || this.privKey == null) {
+      if (!super.isValid()) {
         return false;
       }
-      // Id should be based on the sha256 digest of the key
-      // Compare digests
-      if (!MessageDigest.isEqual(this.getByteId(), Utils.getKeyDigest(this.getPubKey()))) {
+      // The attributes must be set
+      if (this.privKey == null) {
         return false;
       }
       // Validate key pair

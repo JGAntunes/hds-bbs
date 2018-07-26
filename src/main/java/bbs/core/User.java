@@ -9,14 +9,34 @@ import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
+import java.time.ZonedDateTime;
 import java.util.Base64;
 
-public abstract class User {
+public class User extends TimeStampedPayload {
   private RSAPublicKey pubKey;
   private byte[] id;
+  private ZonedDateTime creationDate;
 
+  @Override
   @JsonIgnore
-  public abstract boolean isValid();
+  public boolean isValid() {
+    try {
+      if (!super.isValid()) {
+        return false;
+      }
+      // The attributes must be set
+      if (this.id == null || this.pubKey == null || this.creationDate == null) {
+        return false;
+      }
+      // Id should be based on the sha256 digest of the key
+      // Compare digests
+      return MessageDigest.isEqual(this.id, Utils.getKeyDigest(this.getPubKey()));
+
+      // Catch everything and return false otherwise
+    } catch (Exception e) {
+      return false;
+    }
+  }
 
   @JsonProperty("pubKey")
   public String getPubKeyString() {
@@ -55,6 +75,21 @@ public abstract class User {
     this.id = DatatypeConverter.parseHexBinary(id);
   }
 
+  @JsonProperty("creationDate")
+  public String getCreationDate() {
+    return this.creationDate.toString();
+  }
+
+  @JsonProperty("creationDate")
+  public void setCreationDate(String creationDate) {
+    ZonedDateTime date = ZonedDateTime.parse(creationDate);
+    this.creationDate = date;
+  }
+
+  public void setCreationDate(ZonedDateTime creationDate) {
+    this.creationDate = creationDate;
+  }
+
   public Boolean verifySignature (Message message) throws InvalidKeyException, NoSuchAlgorithmException, SignatureException {
     Signature signature = Signature.getInstance("SHA256withRSA");
     signature.initVerify(this.pubKey);
@@ -66,6 +101,8 @@ public abstract class User {
   public String toString() {
     return "\n== User ==\n"+
         "Id: " + this.getStringId() + "\n" +
+        "Timestamp: " + this.getTimestamp() + "\n" +
+        "CreationDate: " + this.getCreationDate() + "\n" +
         "PubKey: " + this.getPubKeyString();
   }
 }

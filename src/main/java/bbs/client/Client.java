@@ -27,9 +27,10 @@ public class Client {
     System.out.println("Reading private key from: " + privateKeyPath);
     System.out.println("Reading public key from: " + publicKeyPath);
     for (String host : hosts) {
-      System.out.println("Connecting to BBS API host: " + publicKeyPath);
+      System.out.println("Connecting to BBS API host: " + host);
       bbsClients.add(new BBSClient(host));
     }
+    System.out.println("Running with " + bbsClients.size() + " server replication factor");
     Operations operations = new Operations(bbsClients);
 
     System.out.println("Reading client config");
