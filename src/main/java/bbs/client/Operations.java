@@ -1,8 +1,6 @@
 package bbs.client;
 
-import bbs.core.Message;
-import bbs.core.UserClient;
-import bbs.core.Utils;
+import bbs.core.*;
 
 import javax.ws.rs.core.Response;
 import javax.xml.bind.DatatypeConverter;
@@ -13,8 +11,10 @@ import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.interfaces.RSAPublicKey;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class Operations {
 
@@ -27,15 +27,16 @@ public class Operations {
   }
 
   // TODO make all these requests async
-  public UserClient userInfo (String userId) throws NoSuchAlgorithmException {
+  public UserClient userInfo (String userId) throws NoSuchAlgorithmException, SyncFailedException {
     List<UserClient> responses = new ArrayList<UserClient>();
     for(BBSClient restClient : this.restClients) {
       responses.add(restClient.getUser(userId));
     }
-    return responses.get(0);
+    return handleReadUserResponse(responses);
   }
 
   public void register (UserClient user) throws NoSuchAlgorithmException, SyncFailedException {
+    this.acks = 0;
     user.generateTimestamp();
     user.setCreationDate(ZonedDateTime.now());
     for(BBSClient restClient : this.restClients) {
@@ -62,12 +63,12 @@ public class Operations {
     }
   }
 
-  public List<Message> read (String userId, int number) throws NoSuchAlgorithmException {
+  public List<Message> read (String userId, int number) throws NoSuchAlgorithmException, SyncFailedException {
     List<List<Message>> responses = new ArrayList<List<Message>>();
     for(BBSClient restClient : this.restClients) {
       responses.add(restClient.getMessages(userId, number));
     }
-    return responses.get(0);
+    return handleReadMessageResponse(responses);
   }
 
   private void handleWriteResponse (Response response) {
@@ -77,6 +78,36 @@ public class Operations {
     System.out.println("== Reponse ==");
     System.out.println("Status: " + response.getStatus());
     System.out.println("Body: " + response.readEntity(String.class));
+  }
+
+  private UserClient handleReadUserResponse (List<UserClient> responses) throws SyncFailedException {
+    if (responses.size() > (this.restClients.size() / 2)) {
+      ZonedDateTime now = ZonedDateTime.now();
+      UserClient finalResponse = null;
+      int diff = 0;
+      for (UserClient response : responses) {
+        if(ChronoUnit.SECONDS.between(response.getTimestamp(), now) > diff) {
+          finalResponse = response;
+        }
+      }
+      return finalResponse;
+    }
+    throw new SyncFailedException("No consensus from servers");
+  }
+
+  private List<Message> handleReadMessageResponse (List<List<Message>> responses) throws SyncFailedException {
+    if (responses.size() > (this.restClients.size() / 2)) {
+      ZonedDateTime now = ZonedDateTime.now();
+      List<Message> finalResponse = null;
+      int diff = 0;
+      for (List<Message> response : responses) {
+        if(ChronoUnit.SECONDS.between(response.get(0).getTimestamp(), now) > diff) {
+          finalResponse = response;
+        }
+      }
+      return finalResponse;
+    }
+    throw new SyncFailedException("No consensus from servers");
   }
 
   private boolean haveConsensus () {
